@@ -1,0 +1,46 @@
+{
+    "lit": {
+        "desc": "Tools for TeX & Literature",
+        "map": {
+            "texdiff": {
+                "desc": "Git diff with TeX's paragraph breaking",
+                "path": "littools/diff.py"
+            },
+
+            "tex2txt": {
+                "desc": "Convert TeX source to plain text (latexml)",
+                "path": "littools/render.py"
+            },
+
+            "sc2tc": {
+                "desc": "Convert workspace to Traditional Chinese",
+                "path": "littools/to_traditional.py"
+            },
+
+            "texbuild": {
+                "desc": "Build TeX projects",
+                "path": "littools/build.py"
+            }
+        }
+    },
+    
+    "common": {
+        "desc": "Common Utilities",
+        "map": {
+            "shell": {
+                "desc": "Interactive python shell in pytool environment",
+                "path": "common/shell.py"
+            }
+        }
+    },
+
+    "bc": {
+        "desc": "Binary Calculator",
+        "map": {
+            "bc": {
+                "desc": "Binary Calculator with Architectural Awareness",
+                "path": "bincalc/main.py"
+            }
+        }
+    }
+}

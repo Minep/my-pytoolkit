@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+cmds=()
+
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    cat <<EOF
+NAME
+    pytools - Lunaixsky's python tool collection
+
+SYNOPSIS
+    pytools [OPTIONS] [SCOPE][::]NAME ...
+
+DESCRIPTION
+    Invoke a python tool specified by SCOPE::NAME
+
+    If SCOPE is unspecified, the script located in NAME will be executed
+    in the pytool context as if it is a python tool. The interpretation 
+    of NAME depending on the presence of "::" prefix. If present, meaning
+    "::NAME", then NAME is relative to the PYTOOL_DIR. Otherwise it is
+    relative to current working directory (CWD).
+
+    The arguments for the executed tool should be given after NAME.
+    
+    -h, --help          print this help
+    -l, --list          print all avaliable SCOPEs and NAMEs
+
+CURRENT ENVIRONMENT
+    PYTOOL_DIR          ${SCRIPT_DIR}
+    CWD                 $(pwd)
+
+SCOPE AND NAME
+EOF
+    cmds=( "--list" )
+elif [ "$1" == "-*" ]; then
+    cmds=( "$@" )
+else
+    script_str="$1"
+    shift 1
+    cmds=( "$script_str" "--" "$@")
+fi
+
+PYTOOL_DIR="$SCRIPT_DIR" python3 "${SCRIPT_DIR}/gateway.py" "${cmds[@]}"
