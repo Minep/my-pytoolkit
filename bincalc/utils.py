@@ -2,6 +2,7 @@ from itertools import zip_longest
 from state import global_state
 from config import BinConfig, BinEndian, GeneralConfig, DisplyType
 import struct
+import math
 
 
 class BinCalcException(Exception):
@@ -164,12 +165,41 @@ class BitFieldColor:
     Magenta = 35
     Cyan = 36
 
+class BitFieldValue:
+    def __init__(self, name, h, l, val, color=None):
+        self.name = name
+        self.h = h
+        self.l = l
+        self.value = val
+        self.__comment = ""
+        self.__color_str = f"\x1b[{color};49m%s\x1b[39;49m" if color else "%s"
 
-class PteFieldExractor:
+    def set_comment(self, comment):
+        self.__comment = comment
+
+    def __str__(self):
+        field = f"[{self.h:02d}:{self.l:02d}]"
+        name = f"({self.name})".ljust(15, '.')
+        val = hex(self.value)
+        comment = "" if not self.__comment else f"{{ {self.__comment} }}"
+
+        s = f"{field} {name} {val} {comment}"
+        return self.__color_str % (s)
+
+class BitFieldExractor:
     def __init__(self, fields, color_palette=None):
         # sort in descending order, based on MSB position
         self.__fields = sorted(fields, key=lambda x: x[1], reverse=True)
-        self.__palette = list(range(31,37)) if not color_palette else color_palette
+
+        if not color_palette:
+            self.__palette = [
+                BitFieldColor.Magenta,
+                BitFieldColor.Cyan,
+                BitFieldColor.Green,
+                BitFieldColor.Yellow
+            ]
+        else:
+            self.__palette = color_palette
 
         # (assigned_color, field)
         self.__current_fields = None
@@ -252,33 +282,53 @@ class PteFieldExractor:
         for color, (name, h, l) in extracted:
             mask = (-1 << (h + 1)) ^ (-1 << l)
             field_val = (raw_rep & mask) >> l
-            extracted_val.append((color, name, h, l, field_val))
+            field_obj = BitFieldValue(name, h, l, field_val, color)
+            extracted_val.append(field_obj)
 
         return printed_field, extracted_val
 
     def extract_colored(self, val, bit=None):
         return self.__extract_internal(val, bit)
 
-    def print_intepreted(self, val, bit=None):
-        printable_bits, extracted = self.__extract_internal(val, bit)
 
-        field_str = []
-        for color, name, h, l, val in extracted:
-            field_str.append([
-                f"\x1b[{color};49m",
-                f"{name}[{h:02d}:{l:02d}]",
-                f"{hex(val)}"
-            ])
+def arrange(values, cols=2, seq_number=True):
+    max_len = 0
+    strs = []
 
-        mid = len(field_str) // 2 + 1
-        col1, col2 = field_str[:mid], field_str[mid:]
+    for v in values:
+        v = str(v)
+        max_len = max(len(v), max_len)
+        strs.append(v)
 
-        print(printable_bits)
-        print()
+    temp = []
+    for i, s in enumerate(strs):
+        s = s.ljust(max_len)
+        if seq_number:
+            temp.append(f"{i}.".rjust(3) + " " + s)
+        else:
+            temp.append(s)
 
-        for c1, c2 in zip_longest(col1, col2):
-            [c1clr, c1name, c1str] = ["", "", ""] if c1 is None else c1
-            [c2clr, c2name, c2str] = ["", "", ""] if c2 is None else c2
+    spilts = []
+    seg = math.ceil(len(temp) / cols)
+    pos = 0
 
-            print(f"{c1clr}{c1name:>15} {c1str:<30}\x1b[0m",
-                  f"{c2clr}{c2name:>15} {c2str:<30}\x1b[0m")
+    while pos < len(temp):
+        to = min(len(temp), pos + seg)
+        spilts.append(temp[pos:to])
+
+        pos += seg
+
+    result = []
+    for parts in zip_longest(*spilts):
+        line = []
+        for part in parts:
+            if not part:
+                line.append(" " * max_len)
+            else:
+                line.append(part)
+        result.append(" ".join(line))
+
+    return "\n".join(result)
+
+def sprint(*args):
+    return " ".join([str(x) for x in args])

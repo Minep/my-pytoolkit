@@ -3,7 +3,7 @@ from state import global_state
 from utils import get_converter, BinCalcException 
 from cmds import AllFunctions
 
-from config import preset_x86_64_LA48
+from config import preset_x86_64_LA48, preset_arm64_le_va48_4k
 
 
 
@@ -14,7 +14,7 @@ class BinaryCalculator:
         self.__save_records = {}
 
         # setup defaults
-        self.__gs.config.update(preset_x86_64_LA48())
+        self.__gs.config.update(preset_arm64_le_va48_4k())
 
         self.__all_fns = AllFunctions()
 

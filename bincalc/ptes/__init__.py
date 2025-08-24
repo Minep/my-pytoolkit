@@ -1,9 +1,10 @@
 from .x86_64 import interpret_pte as interpret_pte_x86
+from .arm64 import interpret_pte as interpret_pte_arm64
 
-from .config import BinConfig, BinArch
-from .utils import BinCalcException
-from .function_base import BincalcFunctions
-from .cmdbase import cmd
+from config import BinConfig, BinArch
+from utils import BinCalcException
+from function_base import BincalcFunctions
+from cmdbase import cmd
 
 
 class PteFunctions(BincalcFunctions):
@@ -15,6 +16,9 @@ class PteFunctions(BincalcFunctions):
         arch = BinConfig.Arch[self.gs.config]
         if arch == BinArch.X86_64:
             return interpret_pte_x86(pte, level)
+
+        if arch == BinArch.Arm64:
+            return interpret_pte_arm64(pte, level)
 
         raise BinCalcException(f"not supported for '{arch}'")
 

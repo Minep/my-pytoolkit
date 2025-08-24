@@ -96,6 +96,24 @@ def preset_arm64_le_va48_64k():
     mmu_config(c, 48, 48, 16, 4)
     return c
 
+def preset_arm64_le_va48_pa52_4k():
+    c = preset_arm64_base(BinEndian.Little)
+    
+    mmu_config(c, 48, 52, 12, 4)
+    return c
+
+def preset_arm64_le_va48_pa52_16k():
+    c = preset_arm64_base(BinEndian.Little)
+    
+    mmu_config(c, 48, 52, 14, 4)
+    return c
+
+def preset_arm64_le_va48_pa52_64k():
+    c = preset_arm64_base(BinEndian.Little)
+    
+    mmu_config(c, 48, 52, 16, 4)
+    return c
+
 def arch_preset():
     return {
             "arm64_base": preset_x86_64_base,
@@ -105,6 +123,9 @@ def arch_preset():
             "arm64_le_va48_4k": preset_arm64_le_va48_4k,
             "arm64_le_va48_16k": preset_arm64_le_va48_16k,
             "arm64_le_va48_64k": preset_arm64_le_va48_64k,
+            "arm64_le_va48_pa52_4k": preset_arm64_le_va48_pa52_4k,
+            "arm64_le_va48_pa52_16k": preset_arm64_le_va48_pa52_16k,
+            "arm64_le_va48_pa52_64k": preset_arm64_le_va48_pa52_64k,
 
             "mmu": mmu_config
     }
