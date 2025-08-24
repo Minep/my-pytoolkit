@@ -129,6 +129,7 @@ def execute(name, *args):
     _extras = {
         "_localRes_": ResourceScope(script_path.parent),
         "_cwdRes_": ResourceScope(os.getcwd()),
+        "_gvt_": dict()
     }
 
     _tool_global = {

@@ -106,4 +106,3 @@ class CmdTable:
 
         return '\n'.join(ls)
 
-

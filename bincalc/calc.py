@@ -1,19 +1,10 @@
 from parser import parse_expr, BuiltinConversion
 from state import global_state
-from utils import get_converter
+from utils import get_converter, BinCalcException 
 from cmds import AllFunctions
 
 from config import preset_x86_64_LA48
 
-
-class BinCalcException(Exception):
-    def __init__(self, msg):
-        super().__init__()
-
-        self.__msg = msg
-
-    def __str__(self):
-        return self.__msg
 
 
 class BinaryCalculator:
@@ -22,10 +13,11 @@ class BinaryCalculator:
         self.__gs = global_state()
         self.__save_records = {}
 
-        self.__all_fns = AllFunctions()
-
         # setup defaults
         self.__gs.config.update(preset_x86_64_LA48())
+
+        self.__all_fns = AllFunctions()
+
 
     def __get_exec_env(self):
         def invoke_cmd(name, *args):

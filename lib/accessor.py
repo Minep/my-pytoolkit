@@ -16,6 +16,9 @@ class AccessorManager:
         self.register(key, acc)
         return acc
 
+    def dict_access(self, key, *args, **kwargs):
+        return self.new(DictAccessor, key, *args, **kwargs)
+
     def get(self, key):
         if key not in self.__maps:
             raise NameError(f"key '{key}' not exists")

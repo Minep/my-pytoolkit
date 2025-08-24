@@ -1,17 +1,11 @@
-from cmdbase import cmd, CmdTable, Executor
-from state import global_state
-from config import BinConfig, GeneralConfig, accessors, arch_preset
-
 from utils import HexConvert, DecConvert, BinConvert
+from function_base import BincalcFunctions
+from cmdbase import cmd, Executor
+from config import arch_preset, GeneralConfig
 
 import textwrap
 
-
-class BincalcFunctions(CmdTable):
-    def __init__(self):
-        super().__init__()
-        self.gs = global_state()
-        self.configs = accessors()
+from ptes import PteFunctions
 
 
 class GeneralFunctions(BincalcFunctions):
@@ -52,6 +46,7 @@ class GeneralFunctions(BincalcFunctions):
             preset = self.__arch_preset[name]
 
             self.gs.config.update(preset())
+            print(self.gs.config)
             return
 
         for k, acc in self.configs.items():
@@ -68,6 +63,7 @@ class AllFunctions(BincalcFunctions):
 
         self.__scoped_fns = {
             "general": GeneralFunctions(),
+            "address transaltion": PteFunctions()
             # More...
         }
 
