@@ -4,8 +4,9 @@ from cmdbase import cmd, Executor
 from config import arch_preset, GeneralConfig
 
 import textwrap
+import json
 
-from ptes import PteFunctions
+from addrtrans import PteFunctions
 
 
 class GeneralFunctions(BincalcFunctions):
@@ -16,30 +17,58 @@ class GeneralFunctions(BincalcFunctions):
 
     @cmd("set")
     def _set(self, key: str, value):
+        """
+            Set a config term
+        """
         self.configs[key][self.gs.config] = value
+
+    @cmd("dump_config")
+    def _dump_config(self):
+        """
+            Dump config object in json
+        """
+        print(json.dumps(self.gs.config, indent=4))
 
     @cmd("get")
     def _get(self, key: str):
+        """
+            Get a config term
+        """
         return str(self.configs[key][self.gs.config])
 
-    @cmd("disp")
+    @cmd("disp", )
     def _disp(self, choice: str):
+        """
+            Set the displace format. Accept: hex | bin | dec
+        """
         GeneralConfig.DisplyType[self.gs.config] = choice
     
     @cmd("hex", "h")
     def _hex(self, val):
+        """
+            Print the value in hexadecimal
+        """
         return HexConvert().convert(val)
 
     @cmd("bin", "b")
     def _bin(self, val):
+        """
+            Print the value in binary
+        """
         return BinConvert().convert(val)
 
     @cmd("dec", "d")
     def _dec(self, val):
+        """
+            Print the value in decimal
+        """
         return DecConvert().convert(val)
 
     @cmd("arch")
     def _arch(self, name: str = None):
+        """
+            Set or get (if NAME is not given) the Arch (ISA) config.
+        """
         if name is not None:
             if name not in self.__arch_preset:
                 raise NameError("unable to find arch config '{name}'")

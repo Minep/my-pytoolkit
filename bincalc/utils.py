@@ -40,6 +40,20 @@ def get_rawrep(val):
     return struct.unpack(f"={unpack_type}", s)[0]
 
 
+def fixbin(v, bits):
+    b = bin(v)[2:]
+    return "0" * (max(bits - len(b), 0)) + b
+
+
+def fixhex(v, bits = None):
+    if bits is None:
+        bits = BinConfig.Bits[global_state().config]
+    
+    digits = bits // 4
+    h = hex(v)[2:]
+    return "0x" + "0" * (max(digits - len(h), 0)) + h
+
+
 def pretty_binary(val, bits, bits_per_group=32, transform_cb=None):
     assert bits % bits_per_group == 0
 

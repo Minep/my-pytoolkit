@@ -1,11 +1,7 @@
 from utils import BinCalcException, get_rawrep
-from state import global_state
 from config import BinConfig
 
 from .pte_utils import PteFormatBase
-
-from textwrap import indent
-
 
 x86_64_pte_common_fields = [
     ("Valid", 0, 0),
@@ -112,7 +108,7 @@ class HugePte(x86PteFormatBase):
             l = 3 - self._level
             mask = (1 << (8 * l)) - 1
             val = f.value & mask
-            return "UNALIGN"
+            return "UNALIGN" if mask != 0 else None
 
         return super().get_field_comment(f)
 

@@ -73,7 +73,8 @@ class Executor:
     def __str__(self):
         return '\n'.join([
             *[f"{name}, {self.argstr}" for name in self.alias + [self.name]],
-            textwrap.indent(self.help, '\t')
+            textwrap.indent(self.help, '\t'),
+            ""
         ])
 
 
