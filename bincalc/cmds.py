@@ -1,12 +1,15 @@
 from utils import HexConvert, DecConvert, BinConvert
 from function_base import BincalcFunctions
 from cmdbase import cmd, Executor
-from config import arch_preset, GeneralConfig
+from config import arch_preset, GeneralConfig, accessors
 
-import textwrap
+from lib.advprinter import AdvPrinter, _fmt_bold
+
+import pydoc
 import json
 
 from addrtrans import PteFunctions
+from sysregs import SysRegFunctions
 
 
 class GeneralFunctions(BincalcFunctions):
@@ -44,21 +47,21 @@ class GeneralFunctions(BincalcFunctions):
         GeneralConfig.DisplyType[self.gs.config] = choice
     
     @cmd("hex", "h")
-    def _hex(self, val):
+    def _hex(self, val: int):
         """
             Print the value in hexadecimal
         """
         return HexConvert().convert(val)
 
     @cmd("bin", "b")
-    def _bin(self, val):
+    def _bin(self, val: int):
         """
             Print the value in binary
         """
         return BinConvert().convert(val)
 
     @cmd("dec", "d")
-    def _dec(self, val):
+    def _dec(self, val: int):
         """
             Print the value in decimal
         """
@@ -85,6 +88,16 @@ class GeneralFunctions(BincalcFunctions):
             val = acc[self.gs.config]
             print(f"{k:^20}{val}")
 
+    @cmd("all_cfgs")
+    def _configs(self):
+        """
+            List all configuration keys avaliable
+        """
+
+        ammgr = accessors()
+        for k, v in ammgr.items():
+            print(_fmt_bold(k), f"(default: {v.default()})")
+
 
 class AllFunctions(BincalcFunctions):
     def __init__(self):
@@ -92,7 +105,8 @@ class AllFunctions(BincalcFunctions):
 
         self.__scoped_fns = {
             "general": GeneralFunctions(),
-            "address transaltion": PteFunctions()
+            "address transaltion": PteFunctions(),
+            "system register": SysRegFunctions()
             # More...
         }
 
@@ -107,35 +121,74 @@ class AllFunctions(BincalcFunctions):
     def register_fn(self, fn_cmd):
         self._cmd_map.append(Executor(fn_cmd))
 
-    def __indent(self, text, level):
-        return textwrap.indent(text, "    " * level)
-
-    def __help_str(self, scope, level):
-        return self.__indent(scope.help_text(), level)
-
-
     @cmd("help", "h")
     def _help(self):
-        help_txt = []
+        buf = AdvPrinter.Buffer()
 
-        help_txt.append("COMMANDS")
+        p = AdvPrinter(buffer=buf)
+        pp   = p >> 1
+        ppp  = p >> 2
+        pppp = p >> 3
 
-        help_txt.append(self.__indent("SYNOPSIS", 1))
-        help_txt.append(self.__indent("command, [ARG],...",2))
-        help_txt.append("")
+        p.printb("SYNOPSIS")
 
-        help_txt.append(self.__indent(
-                            "'command' and the arguments are separated by comma (,)",2))
-        help_txt.append(self.__indent(
-                            "the following list all commands recognised, grouped into categories.",2))
-        help_txt.append("")
+        pp.printblk("""
+            CMD_NAME, [EXPR, ...]
+            EXPR
+        """, nowrap=True)
 
-        for k, v in self.__scoped_fns.items():
+        p.printb("DESCRIPTION")
+        pp.printblk("""
+            Execute a command (following by a comma and optionally arbitary expression EXPR separated by comma),
+            or a single expression EXPR.
+
+            The expression EXPR can be a regular python arithmatic expression or the command invocation itself.
+            In the latter case, the nested command will be evaluated and the return value will be subsituted.
+            If command has no return value, 'None' will be used.
+
+            The result of the expression or return value of the command is avaliable in the subsequent interaction,
+            and can be accessed as variable `A#` where `#` is the expression ID shown in the prompt when the command
+            was executed.
+
+            See GRAMMAR section for complete BNF description of the syntax.
+
+            See LIST OF COMMANDS section gives all command avaliable to invoke.
+        """)
+
+        p.printb("GRAMMAR")
+        pp.printblk("""
+            command    := <expr>;
+
+            expr       := <python-arithmatic-expr>
+                        | <cmd_invoke>;
+
+            cmd_invoke := <cmd_name> , <args>
+                        | <cmd_name> ,
+                        | ;
+
+            args       := <args> , <args>
+                        | <ans-ref>
+                        | <python-literals>
+                        | <python-arithmatic-expr>
+                        | ( <cmd_invoke> ) ;
+
+            cmd_name   := <python-identifiers>
+                        | <python-string>;
+
+            ans-ref    := A <python-numerial>;
+        """, nowrap=True)
+
+        p.printb("LIST OF COMMANDS")
+        for k, fns in self.__scoped_fns.items():
             scope_name = k.upper()
-            help_txt.append(self.__indent(scope_name, 1))
-            help_txt.append(self.__help_str(v, 2))
+            pp.printb(scope_name)
 
-        help_txt.append("ARCH CONFIG")
-        help_txt.append(self.__indent("\n".join(arch_preset().keys()), 1))
+            for v in fns._cmd_map:
+                ppp.printb(v.synopsis())
+                pppp.printblk(v.description())
 
-        print("\n".join(help_txt))
+        p.printb("ARCH CONFIG")
+        pp.print("\n".join(arch_preset().keys()))
+
+        pydoc.pager(str(buf))
+

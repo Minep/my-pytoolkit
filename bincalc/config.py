@@ -1,10 +1,15 @@
 from lib.accessor import DictAccessor, AccessorManager
 from lib.accessor import expect_str, expect_int, expect_bool, expect_oneof
+from shared.context import Context
 
 _ammgr = AccessorManager()
 
 def accessors():
-    global _ammgr
+    if "__ammgr" in Context.GlobalValueTable:
+        return Context.GlobalValueTable["__ammgr"]
+
+    _ammgr = AccessorManager()
+    Context.GlobalValueTable["__ammgr"] = _ammgr
     return _ammgr
 
 class DisplyType:
@@ -13,9 +18,9 @@ class DisplyType:
     Bin = "bin"
 
 class GeneralConfig:
-    Debug = _ammgr.dict_access("debug", expect_bool(), default_val=False)
+    Debug = accessors().dict_access("debug", expect_bool(), default_val=False)
 
-    DisplyType = _ammgr.dict_access("disp",
+    DisplyType = accessors().dict_access("disp",
                         expect_oneof(DisplyType.Dec, DisplyType.Bin, DisplyType.Hex),
                         default_val="hex")
 
@@ -23,15 +28,15 @@ class GeneralConfig:
 #### Arch dependent binary config
 
 class BinConfig:
-    Arch = _ammgr.dict_access("arch:arch", expect_str())
-    Bits = _ammgr.dict_access("arch:bits", expect_int())
+    Arch = accessors().dict_access("arch:arch", expect_str())
+    Bits = accessors().dict_access("arch:bits", expect_int())
 
-    Endian = _ammgr.dict_access("arch:endian", expect_str())
+    Endian = accessors().dict_access("arch:endian", expect_str())
 
-    MmuVABits = _ammgr.dict_access("arch:mmu:va_bits", expect_int())
-    MmuPABits = _ammgr.dict_access("arch:mmu:pa_bits", expect_int())
-    MmuPgGran = _ammgr.dict_access("arch:mmu:page_granule", expect_int())
-    MmuLevels = _ammgr.dict_access("arch:mmu:ptw_level", expect_int())
+    MmuVABits = accessors().dict_access("arch:mmu:va_bits", expect_int())
+    MmuPABits = accessors().dict_access("arch:mmu:pa_bits", expect_int())
+    MmuPgGran = accessors().dict_access("arch:mmu:page_granule", expect_int())
+    MmuLevels = accessors().dict_access("arch:mmu:ptw_level", expect_int())
 
 
 class BinArch:

@@ -4,6 +4,8 @@ from ast import (
     parse, dump
 )
 
+from utils import BinCalcException
+
 import ast
 
 from lib.schmea import (
@@ -80,10 +82,13 @@ class ExpressionTransformer(NodeTransformer):
 
 def parse_expr(expr):
     transform = ExpressionTransformer()
-
-    T = parse(expr, mode='eval')
-    T = transform.visit(T)
-    T = ast.fix_missing_locations(T)
+    
+    try:
+        T = parse(expr, mode='eval', filename=f"expr:'{expr}'")
+        T = transform.visit(T)
+        T = ast.fix_missing_locations(T)
+    except SyntaxError as e:
+        raise BinCalcException(f"syntax error: {e.filename} (1:{e.offset})")
 
     #print(dump(T, indent=4))
     #print(ast.unparse(T))

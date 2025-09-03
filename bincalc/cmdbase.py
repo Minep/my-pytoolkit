@@ -70,12 +70,17 @@ class Executor:
 
         return strtype
 
-    def __str__(self):
-        return '\n'.join([
-            *[f"{name}, {self.argstr}" for name in self.alias + [self.name]],
-            textwrap.indent(self.help, '\t'),
-            ""
-        ])
+    def synopsis(self):
+        names = self.name
+        if self.alias:
+            names = "|".join(self.alias + [self.name])
+            names = f"[{names}]"
+
+        return f"{names}, {self.argstr}"
+
+
+    def description(self):
+        return self.help
 
 
 class CmdTable:

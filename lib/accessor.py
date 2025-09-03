@@ -1,6 +1,11 @@
 from .schmea import Schema, UnionSchema
 
 
+class AccessorException(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class AccessorManager:
     def __init__(self):
         self.__maps = {}
@@ -54,6 +59,9 @@ class AccessorBase:
     def set_value(self, obj, val):
         pass
 
+    def default(self):
+        return self.__default
+
 
 class DictAccessor(AccessorBase):
     def __init__(self, key, checker=None, **kwargs):
@@ -83,7 +91,7 @@ def schema_checker(schema):
     def __check(val):
         if schema.match(val):
             return
-        raise Exception("expect type: " + str(schema) + ", got " + val)
+        raise AccessorException("expect type: " + str(schema) + ", got " + val)
 
     return __check
 

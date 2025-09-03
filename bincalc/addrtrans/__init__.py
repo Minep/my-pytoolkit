@@ -14,7 +14,7 @@ class PteFunctions(BincalcFunctions):
         super().__init__()
 
     @cmd("pte")
-    def interpret_pte(self, pte, level):
+    def interpret_pte(self, pte: int, level: int):
         """
             Interpret the PTE bit fields according to current ISA setting
         """

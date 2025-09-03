@@ -5,6 +5,7 @@ from cmds import AllFunctions
 
 from config import preset_x86_64_LA48, preset_arm64_le_va48_4k
 
+from lib.accessor import AccessorException
 
 
 class BinaryCalculator:
@@ -43,7 +44,13 @@ class BinaryCalculator:
         co = parse_expr(line)
 
         env = self.__get_exec_env()
-        result = eval(co, env)
+
+        try:
+            result = eval(co, env)
+        except AccessorException as e:
+            raise BinCalcException(str(e))
+        except Exception as e:
+            raise e
 
         if type(result) in [int, float]:
             self.__save_records[self.__record_id] = result

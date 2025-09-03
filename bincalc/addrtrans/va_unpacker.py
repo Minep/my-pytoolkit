@@ -2,7 +2,7 @@ from state import global_state
 from config import BinConfig
 
 from utils import fixbin, fixhex, get_rawrep
-from lib.advprinter import AdvPrinter
+from lib.advprinter import AdvPrinter, PydocAdvPrinter
 
 
 class Ptep:
@@ -71,7 +71,6 @@ class Ptep:
         parts = _unpack(val)[1:]
 
         (config, vabits, pgran, level, vpn) = _get_param()
-        max_ents_idx = (1 << vpn) - 1
         bits = BinConfig.Bits[config]
 
         for i, (_, v) in enumerate(parts[:-1]):
@@ -95,39 +94,41 @@ class Ptep:
             if self.transition[-1].offset == ~(-1 << vpn):
                 _type = f"{_type}, L{self.__last_level} recursive entry"
 
-        printer.print(fixhex(self.__ptrval))
+        printer.printb(fixhex(self.__ptrval))
 
-        pp = printer.next_level()
+        pp = printer >> 1
         pp.print(_type)
         pp.print()
-        pp.print("LEVEL TRANSITION")
+        pp.printb("PTW ROUTE")
 
-        ppp = pp.next_level()
+        ppp = pp >> 1
         ppp.print(" --> ".join([str(x) for x in self.transition]))
 
         if self.mis_alignment and self.__last_level != level:
             pp.print()
             pp.print("WARN: ptep does not aligned to pte boundary")
 
-    def derive_inflections(self):
+    def derive_inflections(self, ascend=False):
         (_, _, pgran, level, vpn) = self.__param
         last_ent_idx = ~(-1 << vpn)
         _trns_copy = [Ptep.State(x.offset) for x in self.transition]
 
-        trns_copy = _trns_copy.copy()
-        last_ptep = self
-        while not last_ptep.terminal:
-            trns_copy.insert(0, Ptep.State(last_ent_idx))
-            last_ptep = Ptep(trns_copy.copy())
-            yield last_ptep
+        if ascend:
+            trns_copy = _trns_copy.copy()
+            last_ptep = self
+            while not last_ptep.terminal:
+                trns_copy.insert(0, Ptep.State(last_ent_idx))
+                last_ptep = Ptep(trns_copy.copy())
+                yield last_ptep
 
-        trns_copy = _trns_copy.copy()
-        last_ptep = self
-        while not last_ptep.terminal:
-            trns_copy.pop(0)
-            trns_copy.append(Ptep.State(0))
-            last_ptep = Ptep(trns_copy.copy())
-            yield last_ptep
+        else:
+            trns_copy = _trns_copy.copy()
+            last_ptep = self
+            while not last_ptep.terminal:
+                trns_copy.pop(0)
+                trns_copy.append(Ptep.State(0))
+                last_ptep = Ptep(trns_copy.copy())
+                yield last_ptep
 
 
 def __cell(x):
@@ -197,31 +198,33 @@ def unpack_vaddr(va):
 def unpack_ptep(vaddr):
     ptep = Ptep(vaddr)
 
-    printer = AdvPrinter()
+    with PydocAdvPrinter() as p:
+        pp = p >> 1
+        ppp = p >> 2
 
-    printer.print()
-    printer.print("DESCRIPTION")
-    printer.print()
+        p.print()
+        p.printb("DESCRIPTION")
+        p.print()
 
-    pp = printer.next_level()
-    ptep.print(pp)
+        ptep.print(pp)
 
-    printer.print()
-    printer.print("VA BREAK DOWN")
-    printer.print()
-    __unpack_vaddr_print(vaddr, printer.next_level())
+        p.print()
+        p.printb("VA BREAK DOWN")
+        p.print()
+        __unpack_vaddr_print(vaddr, pp)
 
-    printer.print()
-    printer.print("INFLECTIONS")
-    printer.print()
+        p.print()
+        p.printb("INFLECTIONS")
 
-    pp = printer.next_level()
-    for inflected in ptep.derive_inflections():
-        inflected.print(pp)
-        pp.print()
+        pp.printb("ASCEND")
+        for inflected in ptep.derive_inflections(ascend=True):
+            inflected.print(ppp)
+            ppp.print()
 
-        if inflected.terminal:
-            pp.print("-------------------")
-            pp.print()
+        pp.printb("DESCEND")
+        for inflected in ptep.derive_inflections(ascend=False):
+            inflected.print(ppp)
+            ppp.print()
 
-    return vaddr
+
+        return vaddr
